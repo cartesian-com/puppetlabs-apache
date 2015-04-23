@@ -31,7 +31,7 @@ define apache::vhost(
   $default_vhost               = false,
   $servername                  = $name,
   $serveraliases               = [],
-  $options                     = ['Indexes','FollowSymLinks','MultiViews'],
+  $options                     = $::apache::params::vhost_options,
   $override                    = ['None'],
   $directoryindex              = '',
   $vhost_name                  = '*',

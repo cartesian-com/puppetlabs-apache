@@ -420,6 +420,4 @@ class apache::params inherits ::apache::version {
   } else {
     fail("Class['apache::params']: Unsupported osfamily: ${::osfamily}")
   }
-  #vhost options
-  $vhost_options = ['Indexes','FollowSymLinks','MultiViews']
 }

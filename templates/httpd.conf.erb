@@ -25,6 +25,13 @@ AccessFileName .htaccess
 <%- end -%>
 </FilesMatch>
 
+<% if @deny_ini_files -%>
+<Files ~ "\.ini$">
+  Order allow,deny
+  Deny from all
+</Files>
+<% end -%>
+
 <Directory />
   Options FollowSymLinks
   AllowOverride None

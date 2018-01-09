@@ -33,7 +33,7 @@ class apache::mod::pagespeed (
   $message_buffer_size           = 100000,
   $additional_configuration      = {},
   $apache_version                = $::apache::apache_version,
-  $package_ensure                = undef,
+  $package_ensure                = 'absent',
 ){
 
   $_lib = $::apache::apache_version ? {

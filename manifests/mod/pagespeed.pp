@@ -33,6 +33,7 @@ class apache::mod::pagespeed (
   $message_buffer_size           = 100000,
   $additional_configuration      = {},
   $apache_version                = $::apache::apache_version,
+  $package_ensure                = undef,
 ){
 
   $_lib = $::apache::apache_version ? {
@@ -42,6 +43,7 @@ class apache::mod::pagespeed (
 
   apache::mod { 'pagespeed':
     lib => $_lib,
+    package_ensure => $package_ensure,
   }
 
   file { 'pagespeed.conf':

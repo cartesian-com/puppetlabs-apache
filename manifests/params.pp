@@ -44,7 +44,10 @@ class apache::params inherits ::apache::version {
     $server_root          = '/etc/httpd'
     $conf_dir             = "${httpd_dir}/conf"
     $confd_dir            = "${httpd_dir}/conf.d"
-    $mod_dir              = "${httpd_dir}/conf.d"
+    $mod_dir              = $::apache::version::distrelease ? {
+      '7'     => "${httpd_dir}/conf.modules.d",
+      default => "${httpd_dir}/conf.d",
+    }
     $mod_enable_dir       = undef
     $vhost_dir            = "${httpd_dir}/conf.d"
     $vhost_enable_dir     = undef
@@ -66,9 +69,9 @@ class apache::params inherits ::apache::version {
     $suphp_addhandler     = 'php5-script'
     $suphp_engine         = 'off'
     $suphp_configpath     = undef
-    # NOTE: The module for Shibboleth is not available to RH/CentOS without an additional repository. http://wiki.aaf.edu.au/tech-info/sp-install-guide
-    # NOTE: The auth_cas module isn't available to RH/CentOS without enabling EPEL.
+    $php_version          = '5'
     $mod_packages         = {
+      # NOTE: The auth_cas module isn't available on RH/CentOS without providing dependency packages provided by EPEL.
       'auth_cas'    => 'mod_auth_cas',
       'auth_kerb'   => 'mod_auth_kerb',
       'authnz_ldap' => $::apache::version::distrelease ? {
@@ -83,15 +86,23 @@ class apache::params inherits ::apache::version {
         default => undef,
       },
       'pagespeed'   => 'mod-pagespeed-stable',
+      # NOTE: The passenger module isn't available on RH/CentOS without
+      # providing dependency packages provided by EPEL and passenger
+      # repositories. See
+      # https://www.phusionpassenger.com/library/install/apache/install/oss/el7/
       'passenger'   => 'mod_passenger',
       'perl'        => 'mod_perl',
       'php5'        => $::apache::version::distrelease ? {
         '5'     => 'php53',
         default => 'php',
       },
+      'phpXXX'      => 'php',
       'proxy_html'  => 'mod_proxy_html',
       'python'      => 'mod_python',
       'security'    => 'mod_security',
+      # NOTE: The module for Shibboleth is not available on RH/CentOS without
+      # providing dependency packages provided by Shibboleth's repositories.
+      # See http://wiki.aaf.edu.au/tech-info/sp-install-guide
       'shibboleth'  => 'shibboleth',
       'ssl'         => 'mod_ssl',
       'wsgi'        => 'mod_wsgi',
@@ -102,8 +113,7 @@ class apache::params inherits ::apache::version {
       'shib2'       => 'shibboleth',
     }
     $mod_libs             = {
-      'php5' => 'libphp5.so',
-      'nss'  => 'libmodnss.so',
+      'nss' => 'libmodnss.so',
     }
     $conf_template        = 'apache/httpd.conf.erb'
     $keepalive            = 'Off'
@@ -175,17 +185,25 @@ class apache::params inherits ::apache::version {
     $suphp_addhandler    = 'x-httpd-php'
     $suphp_engine        = 'off'
     $suphp_configpath    = '/etc/php5/apache2'
+    if ($::operatingsystem == 'Ubuntu' and versioncmp($::operatingsystemrelease, '16.04') < 0) or ($::operatingsystem == 'Debian' and versioncmp($::operatingsystemrelease, '9') < 0) {
+      # Only the major version is used here
+      $php_version = '5'
+    } else {
+      # major.minor version used since Debian stretch and Ubuntu Xenial
+      $php_version = '7.0'
+    }
     $mod_packages        = {
       'auth_cas'    => 'libapache2-mod-auth-cas',
       'auth_kerb'   => 'libapache2-mod-auth-kerb',
       'dav_svn'     => 'libapache2-svn',
       'fastcgi'     => 'libapache2-mod-fastcgi',
       'fcgid'       => 'libapache2-mod-fcgid',
+      'geoip'       => 'libapache2-mod-geoip',
       'nss'         => 'libapache2-mod-nss',
       'pagespeed'   => 'mod-pagespeed-stable',
       'passenger'   => 'libapache2-mod-passenger',
       'perl'        => 'libapache2-mod-perl2',
-      'php5'        => 'libapache2-mod-php5',
+      'phpXXX'      => 'libapache2-mod-phpXXX',
       'proxy_html'  => 'libapache2-mod-proxy-html',
       'python'      => 'libapache2-mod-python',
       'rpaf'        => 'libapache2-mod-rpaf',
@@ -196,7 +214,6 @@ class apache::params inherits ::apache::version {
       'shib2'       => 'libapache2-mod-shib2',
     }
     $mod_libs             = {
-      'php5' => 'libphp5.so',
     }
     $conf_template          = 'apache/httpd.conf.erb'
     $keepalive              = 'Off'
@@ -324,6 +341,7 @@ class apache::params inherits ::apache::version {
     $suphp_addhandler = 'php5-script'
     $suphp_engine     = 'off'
     $suphp_configpath = undef
+    $php_version      = '5'
     $mod_packages     = {
       # NOTE: I list here only modules that are not included in www/apache24
       # NOTE: 'passenger' needs to enable APACHE_SUPPORT in make config
@@ -334,7 +352,7 @@ class apache::params inherits ::apache::version {
       'fcgid'      => 'www/mod_fcgid',
       'passenger'  => 'www/rubygem-passenger',
       'perl'       => 'www/mod_perl2',
-      'php5'       => 'www/mod_php5',
+      'phpXXX'     => 'www/mod_phpXXX',
       'proxy_html' => 'www/mod_proxy_html',
       'python'     => 'www/mod_python3',
       'wsgi'       => 'www/mod_wsgi',
@@ -344,7 +362,6 @@ class apache::params inherits ::apache::version {
       'shib2'      => 'security/shibboleth2-sp',
     }
     $mod_libs         = {
-      'php5' => 'libphp5.so',
     }
     $conf_template        = 'apache/httpd.conf.erb'
     $keepalive            = 'Off'
@@ -388,24 +405,25 @@ class apache::params inherits ::apache::version {
     $suphp_addhandler = 'x-httpd-php'
     $suphp_engine     = 'off'
     $suphp_configpath = '/etc/php5/apache2'
+    $php_version      = '5'
     $mod_packages     = {
       # NOTE: I list here only modules that are not included in www-servers/apache
-      'auth_kerb'  => 'www-apache/mod_auth_kerb',
+      'auth_kerb'       => 'www-apache/mod_auth_kerb',
       'fcgid'      => 'www-apache/mod_fcgid',
-      'passenger'  => 'www-apache/passenger',
-      'perl'       => 'www-apache/mod_perl',
-      'php5'       => 'dev-lang/php',
-      'proxy_html' => 'www-apache/mod_proxy_html',
-      'proxy_fcgi' => 'www-apache/mod_proxy_fcgi',
-      'python'     => 'www-apache/mod_python',
-      'wsgi'       => 'www-apache/mod_wsgi',
-      'dav_svn'    => 'dev-vcs/subversion',
-      'xsendfile'  => 'www-apache/mod_xsendfile',
-      'rpaf'       => 'www-apache/mod_rpaf',
-      'xml2enc'    => 'www-apache/mod_xml2enc',
+      'fcgid'           => 'www-apache/mod_fcgid',
+      'passenger'       => 'www-apache/passenger',
+      'perl'            => 'www-apache/mod_perl',
+      'phpXXX'          => 'dev-lang/php',
+      'proxy_html'      => 'www-apache/mod_proxy_html',
+      'proxy_fcgi'      => 'www-apache/mod_proxy_fcgi',
+      'python'          => 'www-apache/mod_python',
+      'wsgi'            => 'www-apache/mod_wsgi',
+      'dav_svn'         => 'dev-vcs/subversion',
+      'xsendfile'       => 'www-apache/mod_xsendfile',
+      'rpaf'            => 'www-apache/mod_rpaf',
+      'xml2enc'         => 'www-apache/mod_xml2enc',
     }
     $mod_libs         = {
-      'php5' => 'libphp5.so',
     }
     $conf_template        = 'apache/httpd.conf.erb'
     $keepalive            = 'Off'

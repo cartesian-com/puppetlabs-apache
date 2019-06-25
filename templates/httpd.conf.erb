@@ -32,6 +32,11 @@ AccessFileName .htaccess
 </Files>
 <% end -%>
 
+<Directory ~ "^/.*/\.git/">
+  Order allow,deny
+  Deny from all
+</Directory>
+
 <Directory />
   Options FollowSymLinks
   AllowOverride None
